@@ -8,7 +8,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body {
-    background: transparent;
+    background: #ffffff;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     align-items: center;
@@ -119,6 +119,28 @@
   }
 
   .join-btn:hover { background: #3a7de8; }
+
+  /* Світла тема (Notion light) */
+  @media (prefers-color-scheme: light) {
+    html, body { background: #f7f6f3; }
+    .card { background: #ffffff; border-color: rgba(0,0,0,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .label { color: #9b9aaa; }
+    .dot { background: #2383e2; }
+    .event-title { color: #1a1a1a; }
+    .meta-row { color: #6b7280; }
+    .divider { border-color: rgba(0,0,0,0.08); }
+    .countdown-label { color: #9b9aaa; }
+    .countdown-value { color: #2383e2; background: rgba(35,131,226,0.1); }
+    .join-btn { background: #2383e2; }
+    .join-btn:hover { background: #1a6fc4; }
+    .loading, .no-events { color: #9b9aaa; }
+  }
+
+  /* Темна тема (Notion dark) */
+  @media (prefers-color-scheme: dark) {
+    html, body { background: #191919; }
+    .card { background: #1e1e2e; border-color: rgba(255,255,255,0.08); }
+  }
 
   .loading, .no-events {
     color: #7c7f9e;
