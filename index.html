@@ -213,16 +213,17 @@
   }
 
   function toGCalDate(iso) {
-    return iso.replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   }
 
-  function buildAddToCalLink(ev, startRaw, endRaw) {
+  function buildAddToCalLink(ev, startRaw, endRaw, meetLink) {
+    const meetLine = meetLink ? ('Посилання на зустріч: ' + meetLink + '\n\n') : '';
     const params = new URLSearchParams({
       action: 'TEMPLATE',
       text: ev.summary || '',
       dates: `${toGCalDate(startRaw)}/${toGCalDate(endRaw)}`,
-      details: ev.description || '',
-      location: ev.location || ''
+      details: meetLine + (ev.description || ''),
+      location: meetLink || ev.location || ''
     });
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
   }
@@ -263,7 +264,7 @@
         || ev.conferenceData?.entryPoints?.find(e => e.entryPointType === 'video')?.uri
         || null;
 
-      const addLink = buildAddToCalLink(ev, startRaw, endRaw);
+      const addLink = buildAddToCalLink(ev, startRaw, endRaw, meetLink);
 
       document.getElementById('content').innerHTML = `
         <a href="${ev.htmlLink}" target="_blank" class="event-title">${ev.summary}</a>
