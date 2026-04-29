@@ -34,6 +34,9 @@
     text-transform: uppercase;
     color: #7c7f9e;
     margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .dot {
@@ -42,8 +45,8 @@
     height: 8px;
     border-radius: 50%;
     background: #4f8ef7;
-    margin-right: 8px;
     animation: pulse 2s infinite;
+    flex-shrink: 0;
   }
 
   @keyframes pulse {
@@ -73,10 +76,7 @@
     color: #9394b0;
   }
 
-  .meta-row svg {
-    flex-shrink: 0;
-    opacity: 0.7;
-  }
+  .meta-row svg { flex-shrink: 0; opacity: 0.7; }
 
   .divider {
     border: none;
@@ -88,12 +88,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 12px;
   }
 
-  .countdown-label {
-    font-size: 12px;
-    color: #7c7f9e;
-  }
+  .countdown-label { font-size: 12px; color: #7c7f9e; }
 
   .countdown-value {
     font-size: 13px;
@@ -103,6 +101,31 @@
     padding: 4px 10px;
     border-radius: 20px;
   }
+
+  .join-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px;
+    background: #4f8ef7;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .join-btn:hover { background: #3a7de8; }
+
+  .loading, .no-events {
+    color: #7c7f9e;
+    font-size: 14px;
+    text-align: center;
+    padding: 10px 0;
+  }
 </style>
 </head>
 <body>
@@ -110,60 +133,118 @@
   <div class="label">
     <span class="dot"></span>Найближча подія
   </div>
-
-  <div class="event-title" id="title">Відкритий урок від Владисдава Мальчевського</div>
-
-  <div class="event-meta">
-    <div class="meta-row">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>
-      <span id="date">Понеділок, 11 травня 2026</span>
+  <div id="content" class="loading">Завантаження...</div>
+  <div id="bottom-block" style="display:none">
+    <hr class="divider">
+    <div class="countdown">
+      <span class="countdown-label">До події</span>
+      <span class="countdown-value" id="countdown">—</span>
     </div>
-    <div class="meta-row">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>
-      <span id="time">17:00 – 18:00</span>
-    </div>
-  </div>
-
-  <hr class="divider">
-
-  <div class="countdown">
-    <span class="countdown-label">До події</span>
-    <span class="countdown-value" id="countdown">—</span>
+    <div id="join-block"></div>
   </div>
 </div>
 
 <script>
-  const eventDate = new Date('2026-05-11T17:00:00');
+  const API_KEY = 'AIzaSyDpvMXIh6ZpeCRHxdH6NAZAD4MH5hHHQrk';
+  const CALENDAR_ID = 'c_8f93cfbe74415ddb08b0ae24d2fef57bb3eaab7141382498f44602146805dacd@group.calendar.google.com';
+
+  let eventStart = null;
+
+  const DAYS_UK = ['Неділя','Понеділок','Вівторок','Середа','Четвер',"П'ятниця",'Субота'];
+  const MONTHS_UK = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+
+  function formatDate(d) {
+    const dt = new Date(d);
+    return `${DAYS_UK[dt.getDay()]}, ${dt.getDate()} ${MONTHS_UK[dt.getMonth()]} ${dt.getFullYear()}`;
+  }
+
+  function formatTime(s, e) {
+    const pad = n => String(n).padStart(2,'0');
+    const sd = new Date(s), ed = new Date(e);
+    return `${pad(sd.getHours())}:${pad(sd.getMinutes())} – ${pad(ed.getHours())}:${pad(ed.getMinutes())}`;
+  }
 
   function updateCountdown() {
-    const now = new Date();
-    const diff = eventDate - now;
+    if (!eventStart) return;
+    const diff = eventStart - new Date();
+    const el = document.getElementById('countdown');
+    if (diff <= 0) { el.textContent = 'Зараз!'; return; }
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    if (days > 0) el.textContent = `${days} дн. ${hours} год.`;
+    else if (hours > 0) el.textContent = `${hours} год. ${mins} хв.`;
+    else el.textContent = `${mins} хв.`;
+  }
 
-    if (diff <= 0) {
-      document.getElementById('countdown').textContent = 'Зараз!';
-      return;
-    }
+  async function fetchEvent() {
+    const now = new Date().toISOString();
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?key=${API_KEY}&timeMin=${now}&maxResults=1&singleEvents=true&orderBy=startTime`;
 
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
 
-    if (days > 0) {
-      document.getElementById('countdown').textContent = `${days} дн. ${hours} год.`;
-    } else if (hours > 0) {
-      document.getElementById('countdown').textContent = `${hours} год. ${mins} хв.`;
-    } else {
-      document.getElementById('countdown').textContent = `${mins} хв.`;
+      if (!data.items || data.items.length === 0) {
+        document.getElementById('content').innerHTML = '<div class="no-events">Найближчих подій немає</div>';
+        return;
+      }
+
+      const ev = data.items[0];
+      const startRaw = ev.start.dateTime || ev.start.date;
+      const endRaw = ev.end.dateTime || ev.end.date;
+      eventStart = new Date(startRaw);
+      const isAllDay = !ev.start.dateTime;
+
+      const meetLink = ev.hangoutLink
+        || ev.conferenceData?.entryPoints?.find(e => e.entryPointType === 'video')?.uri
+        || null;
+
+      document.getElementById('content').innerHTML = `
+        <div class="event-title">${ev.summary}</div>
+        <div class="event-meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span>${formatDate(startRaw)}</span>
+          </div>
+          ${!isAllDay ? `
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>${formatTime(startRaw, endRaw)}</span>
+          </div>` : ''}
+        </div>
+      `;
+
+      document.getElementById('bottom-block').style.display = 'block';
+
+      if (meetLink) {
+        document.getElementById('join-block').innerHTML = `
+          <a href="${meetLink}" target="_blank" class="join-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="23 7 16 12 23 17 23 7"/>
+              <rect x="1" y="5" width="15" height="14" rx="2"/>
+            </svg>
+            Приєднатись до зустрічі
+          </a>
+        `;
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 30000);
+
+    } catch (e) {
+      document.getElementById('content').innerHTML = '<div class="no-events">Помилка завантаження</div>';
     }
   }
 
-  updateCountdown();
-  setInterval(updateCountdown, 30000);
+  fetchEvent();
 </script>
 </body>
 </html>
