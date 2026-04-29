@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Найближча подія</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 16px;
+  }
+
+  .card {
+    background: #1e1e2e;
+    border-radius: 16px;
+    padding: 20px 24px;
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #7c7f9e;
+    margin-bottom: 14px;
+  }
+
+  .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4f8ef7;
+    margin-right: 8px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .event-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e8e8f0;
+    line-height: 1.3;
+    margin-bottom: 12px;
+  }
+
+  .event-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #9394b0;
+  }
+
+  .meta-row svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin: 16px 0;
+  }
+
+  .countdown {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .countdown-label {
+    font-size: 12px;
+    color: #7c7f9e;
+  }
+
+  .countdown-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4f8ef7;
+    background: rgba(79, 142, 247, 0.12);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="label">
+    <span class="dot"></span>Найближча подія
+  </div>
+
+  <div class="event-title" id="title">Відкритий урок від Владисдава Мальчевського</div>
+
+  <div class="event-meta">
+    <div class="meta-row">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span id="date">Понеділок, 11 травня 2026</span>
+    </div>
+    <div class="meta-row">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <span id="time">17:00 – 18:00</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="countdown">
+    <span class="countdown-label">До події</span>
+    <span class="countdown-value" id="countdown">—</span>
+  </div>
+</div>
+
+<script>
+  const eventDate = new Date('2026-05-11T17:00:00');
+
+  function updateCountdown() {
+    const now = new Date();
+    const diff = eventDate - now;
+
+    if (diff <= 0) {
+      document.getElementById('countdown').textContent = 'Зараз!';
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (days > 0) {
+      document.getElementById('countdown').textContent = `${days} дн. ${hours} год.`;
+    } else if (hours > 0) {
+      document.getElementById('countdown').textContent = `${hours} год. ${mins} хв.`;
+    } else {
+      document.getElementById('countdown').textContent = `${mins} хв.`;
+    }
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 30000);
+</script>
+</body>
+</html>
